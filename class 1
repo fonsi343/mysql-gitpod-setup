@@ -16,3 +16,4 @@ ALTER TABLE universities ADD COLUMN province VARCHAR (30);
 ALTER TABLE universities ADD COLUMN mcrank INT DEFAULT 0;
 DELETE FROM universities WHERE name='MRU';
 INSERT INTO universities (name, location, id, urank, province, mcrank) VALUES ('MRU', "Calgary", 6, 10, 'AB', 5);
+-- hello
