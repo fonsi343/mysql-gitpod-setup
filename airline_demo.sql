@@ -162,6 +162,23 @@ UPDATE Flight
 SET Arrival_Date="2022-12-15 16:00"
 WHERE PK_Flight_Number = "004";
 
+UPDATE Flight
+SET Departure_Date="2022-10-06 19:00"
+WHERE PK_Flight_Number= "001";
+
+UPDATE Flight
+SET Departure_Date="2022-11-06 12:00"
+WHERE PK_Flight_Number= "002";
+
+UPDATE Flight
+SET Departure_Date="2022-11-30 17:00"
+WHERE PK_Flight_Number= "003";
+
+UPDATE Flight
+SET Departure_Date="2022-12-15 12:30"
+WHERE PK_Flight_Number= "004";
+
+
 --Transaction Table
 
 CREATE TABLE Transaction_Table (
@@ -233,16 +250,26 @@ FROM table1
 INNER JOIN table2
 ON table1.column_name = table2.column_name;
 
-SELECT PK_Flight_Number, Departure_Date, Arrival_Date, Airline_Name, (SELECT city_name FROM Locations AS l WHERE f.FK_Arrival_Airport=l.PK_Airport_ID) As "Arrival City", (SELECT city_name FROM Locations AS l WHERE f.FK_Departure_Airport=l.PK_Airport_ID) As "Departure City"
+SELECT PK_Flight_Number, Departure_Date, Arrival_Date, Airline_Name, (SELECT city_name FROM Locations AS l WHERE f.FK_Arrival_Airport=l.PK_Airport_ID) As "Arrival City", (SELECT city_name FROM Locations AS l WHERE f.FK_Departure_Airport=l.PK_Airport_ID) As "Departure City", (SELECT Customer_ID FROM Booking as b WHERE f.PK_Flight_Number=b.Flight_Number) AS "Customer ID", Customer_ID
 FROM Flight as f
 INNER JOIN Airline as a
-ON f.Airline_ID=a.PK_Airline_ID;
+ON f.Airline_ID=a.PK_Airline_ID
+INNER JOIN Booking as b
+ON f.PK_Flight_Number=b.Flight_Number;
 
+--BOARDING TICKET FINAL
+SELECT PK_Flight_Number, Departure_Date, Arrival_Date, Airline_Name, (SELECT city_name FROM Locations AS l WHERE f.FK_Arrival_Airport=l.PK_Airport_ID) As "Arrival City", (SELECT city_name FROM Locations AS l WHERE f.FK_Departure_Airport=l.PK_Airport_ID) As "Departure City", Customer_ID, First_Name, Last_Name
+FROM Flight as f
+INNER JOIN Airline as a
+ON f.Airline_ID=a.PK_Airline_ID
+INNER JOIN Booking as b
+ON f.PK_Flight_Number=b.Flight_Number
+INNER JOIN
+Customer AS c
+ON c.PK_Customer_ID=b.Customer_ID;
 
-
-
-
-  SELECT customerName, customercity, customermail, salestotal
+--SYNTAX
+SELECT customerName, customercity, customermail, salestotal
 FROM onlinecustomers AS oc
    INNER JOIN
    orders AS o
@@ -250,3 +277,42 @@ FROM onlinecustomers AS oc
    INNER JOIN
    sales AS s
    ON o.orderId = s.orderId
+  
+--HOW MANY PEOPLE THERE ARE PER CLASS ON A PARTICULAR FLIGHT
+SELECT PK_Flight_Number, Tail_Number, First_Class_Seats, Business_Class_Seats, Economy_Class_Seats
+FROM Flight;
+
+--Asumptions: Class seats number refer to alreasdy purchased seats on each respective class
+
+--CUSTOMER WANTS TO UPGRADE SEAT FROM ECONOMY TO FIRST CLASS
+UPDATE Booking as b
+INNER JOIN Customer as c ON b.Customer_ID=c.PK_Customer_ID
+SET Booked_Economy_Class="0", Booked_First_Class="1"
+WHERE Last_Name="KISHNA";
+
+
+--BOOK A FLIGHT FOR A NEW CUSTOMER
+
+INSERT INTO Mailing_Address(PK_Mailing_Address, Mailing_Country, Mailing_City, Postal_Code, Mailing_Region, Street, Mailing_Phone)
+VALUES("258 Blackthorn Ave", "CANADA", "TORONTO", "456230", "ONTARIO", "1", "11177777");
+INSERT INTO Mail_Customers(PK_Mail_Customers_ID, Customer_ID, Mailing_Address)
+VALUES("5555", "5555","258 Blackthorn Ave");
+INSERT INTO Customer(PK_Customer_ID, Mailing_Address, First_Name, Last_Name, Citizenship, Passport_Number, Phone_Number, Email)
+VALUES("5555", "258 Blackthorn Ave", "Biandi", "Santos", "COLOMBIA", "A8934", "131159315", "biandi@gmail.com");
+INSERT INTO Transaction_Table(PK_Transaction_Number, Total_Price, Flight_Price, Airport_Tax_Origin, Airport_Tax_Destination, Amount_Paid, Outstanding_Balance, Currency, Exchange_Rate_US_Dollar, Payment_Date, Remaining_Days_Payment)
+VALUES("888888", 600.00, 500.00, 50.00, 50.00, 600.00, 0, "US DOLLAR", 1.00, "2022-10-1 13:00", "10");
+INSERT INTO Booking(PK_Booking_Number, Flight_Number, Transaction_Number, Customer_ID, Booking_Status, Booking_Office, Booking_Date, Booked_First_Class, Booked_Business_Class, Booked_Economy_Class)
+VALUES("100000", "001","888888", "5555", "BOOKED", "TORONTO", "2022-10-1 13:00", 1, 0, 0);
+
+
+
+PK_Booking_Number
+Flight_Number
+where Arrival_Airport="New York" and Departure_Airport="Toronto"
+Booked_Business_Class="1"
+Customer_ID
+Booking_Status
+Booking_Date
+Transaction_Number
+Booking_Office
+
