@@ -21,6 +21,7 @@ INSERT INTO Locations(Airport_ID, Country_ID, Country_Name, State_ID, State_Name
 INSERT INTO Locations(Airport_ID, Country_ID, Country_Name, State_ID, State_Name, City_ID, City_Name) VALUES("4", "USA", "UNITED STATES", "ILL", "ILLINOIS", "2", "CHICAGO");
 
 ALTER TABLE Locations RENAME COLUMN Airport_ID TO PK_Airport_ID;
+
 -- para mostrar primary key SHOW CREATE TABLE Locations;
 
 --Airline table
@@ -36,6 +37,7 @@ CREATE TABLE Airline (
   INSERT  INTO Airline ( PK_Airline_ID, Airline_Name, Airline_Nationality) VALUES("AirFra", "AIR FRANCE", "FRANCE");
 
 -- FLIGHT TABLE
+--NOTE: First, Business and Economy class seats fields on the Flight table refer to the number of seats that have already been purchased within each category
 
 CREATE TABLE Flight (
   PK_Flight_Number VARCHAR(10),
@@ -133,18 +135,15 @@ CREATE TABLE Customer (
   INSERT INTO Customer(PK_Customer_ID, Mailing_Address, First_Name, Last_Name, Citizenship, Passport_Number, Phone_Number, Email)
   VALUES ("4444", "82 Haslemere Ave", "RYOU", "URARAKI", "JAPAN", "AJ9090", "51312995", "ryou@gmail.com");
 
+--Change data type 
 
-
-
-  
-
-
---change data type 
 ALTER TABLE Flight
 MODIFY Departure_Date DATETIME;
 
 ALTER TABLE Flight
 MODIFY Arrival_Date DATETIME;
+
+--UPDATE Flight information
 
 UPDATE Flight
 SET Arrival_Date="2022-10-06 21:00"
@@ -241,23 +240,8 @@ SELECT a.PK_Booking_Number, b.PK_Customer_ID
 FROM Booking a, Customer b
 where Customer_ID=PK_Customer_ID
 
---BOARDING TICKETS
 
-Flight_Number, Departure_Airport, Arrival_Airport, Airline_Name, First_Name, Last_Name, Booked_Business_Class, Booked_Economy_Class, Booked_First_Class
-
-SELECT column_name(s)
-FROM table1
-INNER JOIN table2
-ON table1.column_name = table2.column_name;
-
-SELECT PK_Flight_Number, Departure_Date, Arrival_Date, Airline_Name, (SELECT city_name FROM Locations AS l WHERE f.FK_Arrival_Airport=l.PK_Airport_ID) As "Arrival City", (SELECT city_name FROM Locations AS l WHERE f.FK_Departure_Airport=l.PK_Airport_ID) As "Departure City", (SELECT Customer_ID FROM Booking as b WHERE f.PK_Flight_Number=b.Flight_Number) AS "Customer ID", Customer_ID
-FROM Flight as f
-INNER JOIN Airline as a
-ON f.Airline_ID=a.PK_Airline_ID
-INNER JOIN Booking as b
-ON f.PK_Flight_Number=b.Flight_Number;
-
---BOARDING TICKET FINAL
+--1)BOARDING TICKET 
 SELECT PK_Flight_Number, Departure_Date, Arrival_Date, Airline_Name, (SELECT city_name FROM Locations AS l WHERE f.FK_Arrival_Airport=l.PK_Airport_ID) As "Arrival City", (SELECT city_name FROM Locations AS l WHERE f.FK_Departure_Airport=l.PK_Airport_ID) As "Departure City", Customer_ID, First_Name, Last_Name
 FROM Flight as f
 INNER JOIN Airline as a
@@ -268,30 +252,21 @@ INNER JOIN
 Customer AS c
 ON c.PK_Customer_ID=b.Customer_ID;
 
---SYNTAX
-SELECT customerName, customercity, customermail, salestotal
-FROM onlinecustomers AS oc
-   INNER JOIN
-   orders AS o
-   ON oc.customerid = o.customerid
-   INNER JOIN
-   sales AS s
-   ON o.orderId = s.orderId
   
---HOW MANY PEOPLE THERE ARE PER CLASS ON A PARTICULAR FLIGHT
+--2)HOW MANY PEOPLE THERE ARE PER CLASS ON A PARTICULAR FLIGHT
 SELECT PK_Flight_Number, Tail_Number, First_Class_Seats, Business_Class_Seats, Economy_Class_Seats
 FROM Flight;
 
---Asumptions: Class seats number refer to alreasdy purchased seats on each respective class
+--Asumptions: Class seats number refer to already purchased seats on each respective class
 
---CUSTOMER WANTS TO UPGRADE SEAT FROM ECONOMY TO FIRST CLASS
+--3)CUSTOMER WANTS TO UPGRADE SEAT FROM ECONOMY TO FIRST CLASS
 UPDATE Booking as b
 INNER JOIN Customer as c ON b.Customer_ID=c.PK_Customer_ID
 SET Booked_Economy_Class="0", Booked_First_Class="1"
 WHERE Last_Name="KISHNA";
 
 
---BOOK A FLIGHT FOR A NEW CUSTOMER
+--4)BOOK A FLIGHT FOR A NEW CUSTOMER
 
 INSERT INTO Mailing_Address(PK_Mailing_Address, Mailing_Country, Mailing_City, Postal_Code, Mailing_Region, Street, Mailing_Phone)
 VALUES("258 Blackthorn Ave", "CANADA", "TORONTO", "456230", "ONTARIO", "1", "11177777");
@@ -305,14 +280,52 @@ INSERT INTO Booking(PK_Booking_Number, Flight_Number, Transaction_Number, Custom
 VALUES("100000", "001","888888", "5555", "BOOKED", "TORONTO", "2022-10-1 13:00", 1, 0, 0);
 
 
+--5)ADD A SECOND PHONE NUMBER
 
-PK_Booking_Number
-Flight_Number
-where Arrival_Airport="New York" and Departure_Airport="Toronto"
-Booked_Business_Class="1"
-Customer_ID
-Booking_Status
-Booking_Date
-Transaction_Number
-Booking_Office
+ALTER TABLE Customer
+ADD COLUMN Phone_Number_2 VARCHAR(10) AFTER Phone_Number; 
 
+UPDATE Customer
+SET Phone_Number_2="31354321"
+WHERE PK_Customer_ID="1111";
+
+--6)NAMES OF PEOPLE ARRIVING AT AN AIRPORT AT A CITY ON A PARTICULAR DAY 
+
+First_Name, Last_Name, Arrival_Date, Airport_ID, City_Name, Flight_Number
+
+SELECT Arrival_Date, PK_Flight_Number, (SELECT city_name FROM Locations AS l WHERE f.FK_Arrival_Airport=l.PK_Airport_ID) as "Arrival City", Customer_ID, First_Name, Last_Name
+FROM Flight as f
+INNER JOIN Booking as b 
+ON f.PK_Flight_Number=b.Flight_Number
+INNER JOIN Customer as c 
+ON b.Customer_ID=c.PK_Customer_ID
+WHERE Arrival_Date like "%2022-10-06%";
+
+--7)UPDATE ALL FLIGHTS FOR A GIVEN CITY TO BE DELAYED AT A GIVEN TIME
+
+UPDATE Flight as f
+INNER JOIN Locations as l ON f.FK_Departure_Airport=l.PK_Airport_ID
+SET Flight_Status = "OnSchedule"
+WHERE l.City_Name="TORONTO";
+
+
+--8)REMOVE A FLIGHT THAT HAS BOOKED PASSENGERS
+--NOTE: Customers will be notified of a refund on their booking status and the flight will change status to cancelled
+
+Flight_Status="Cancelled"
+Booking_Status ="Refund Available due to Cancelation"
+
+UPDATE Flight
+SET Flight_Status="Cancelled"
+WHERE PK_Flight_Number="001";
+UPDATE Booking
+SET Booking_Status="Refund"
+WHERE Flight_Number="001";
+
+--NOTE: TO NOT REWRITE AGAIN INFORMATION OF FLIGHT NUMER 001,  DUMMY FLIGHT 005 WILL BE REMOVED
+INSERT INTO Flight(PK_Flight_Number) VALUES("005");
+DELETE FROM Flight
+WHERE PK_Flight_Number="005";
+
+
+--SEE PERCENTAGE OF SEATS BOOKED AND AMOUNT OF REVENUE MADE FOR ALL FLIGHTS ON A PARTICULAR MONTH FOR AN AIRLINE
