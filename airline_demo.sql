@@ -22,7 +22,7 @@ INSERT INTO Locations(Airport_ID, Country_ID, Country_Name, State_ID, State_Name
 
 ALTER TABLE Locations RENAME COLUMN Airport_ID TO PK_Airport_ID;
 
--- para mostrar primary key SHOW CREATE TABLE Locations;
+-- SHOW CREATE TABLE Locations;
 
 --Airline table
 CREATE TABLE Airline (
@@ -257,7 +257,7 @@ ON c.PK_Customer_ID=b.Customer_ID;
 SELECT PK_Flight_Number, Tail_Number, First_Class_Seats, Business_Class_Seats, Economy_Class_Seats
 FROM Flight;
 
---Asumptions: Class seats number refer to already purchased seats on each respective class
+--NOTE: Class seats number refer to already purchased seats on each respective class
 
 --3)CUSTOMER WANTS TO UPGRADE SEAT FROM ECONOMY TO FIRST CLASS
 UPDATE Booking as b
